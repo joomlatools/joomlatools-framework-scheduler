@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<koowa-component>
+	<identifier>com:scheduler</identifier>
+	<name>scheduler</name>
+	<version>1.0</version>
+</koowa-component>
