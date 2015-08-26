@@ -52,7 +52,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
         $config->append(array(
             'state'    => array(),
             'priority' => ComSchedulerTaskInterface::PRIORITY_LOW,
-            'frequency' => 60
+            'frequency' => ComSchedulerTaskInterface::FREQUENCY_HOURLY
         ));
     }
 

@@ -21,6 +21,11 @@ interface ComSchedulerTaskInterface
     const TASK_COMPLETE = 0;
     const TASK_SUSPEND  = -1;
 
+    const FREQUENCY_HOURLY  = 60;
+    const FREQUENCY_DAILY   = 1440;
+    const FREQUENCY_WEEKLY  = 10080;
+    const FREQUENCY_MONTHLY = 43200;
+
     /**
      * Runs the task
      *
