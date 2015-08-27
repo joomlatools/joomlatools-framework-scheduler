@@ -28,7 +28,7 @@ class ComSchedulerModelTasks extends KModelDatabase
     protected function _buildQueryColumns(KDatabaseQueryInterface $query)
     {
         if (!$query->isCountQuery()) {
-            $query->columns('tbl.completed_on = 0 OR (NOW() > DATE_ADD(`completed_on`, INTERVAL `frequency` MINUTE)) AS due');
+            $query->columns('(status = 1 AND NOW() > DATE_ADD(modified_on, INTERVAL 15 MINUTE)) AS stale');
         }
     }
 
@@ -37,7 +37,7 @@ class ComSchedulerModelTasks extends KModelDatabase
         $state = $this->getState();
 
         if ($state->stale) {
-            $query->where('(status = 1 AND NOW() > DATE_ADD(modified_on, INTERVAL 1 HOUR))');
+            $query->where('(status = 1 AND NOW() > DATE_ADD(modified_on, INTERVAL 15 MINUTE))');
         }
 
         if (is_numeric($state->status) || !empty($state->status))
