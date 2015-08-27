@@ -13,7 +13,7 @@ class ComSchedulerTaskClear_cache extends ComSchedulerTaskAbstract
     {
         $config->append(array(
             'priority' => ComSchedulerTaskInterface::PRIORITY_HIGH,
-            'frequency' => 30
+            'frequency' => '*/30 * * * *'
         ));
     }
 
