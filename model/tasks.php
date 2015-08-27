@@ -20,7 +20,7 @@ class ComSchedulerModelTasks extends KModelDatabase
         parent::__construct($config);
 
         $this->getState()
-            ->insert('due', 'boolean')
+            ->insert('stale', 'boolean')
             ->insert('status', 'int')
             ->insert('queue', 'int');
     }
@@ -36,8 +36,8 @@ class ComSchedulerModelTasks extends KModelDatabase
     {
         $state = $this->getState();
 
-        if ($state->due) {
-            $query->where('(tbl.completed_on = 0 OR (NOW() > DATE_ADD(completed_on, INTERVAL frequency MINUTE)))');
+        if ($state->stale) {
+            $query->where('(status = 1 AND NOW() > DATE_ADD(modified_on, INTERVAL 1 HOUR))');
         }
 
         if (is_numeric($state->status) || !empty($state->status))
