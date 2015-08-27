@@ -31,7 +31,7 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
         $this->setModel($config->model);
 
-        @set_time_limit(0);
+        @set_time_limit(60);
         @ini_set('memory_limit', '256M');
         @ignore_user_abort(true);
     }
@@ -58,7 +58,13 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
                 return;
             }
 
-            $runner = $this->getObject($task->id, array('state' => $task->getState()));
+            $time = time();
+            $runner = $this->getObject($task->id, array(
+                'state'       => $task->getState(),
+                'should_stop' => function() use ($time) {
+                    return time() > $time+5;
+                }
+            ));
 
             $task->status = 1;
             $task->save();

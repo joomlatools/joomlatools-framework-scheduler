@@ -35,6 +35,15 @@ interface ComSchedulerTaskInterface
     public function run();
 
     /**
+     * Signals that the task should save state and call suspend as soon as possible if true
+     *
+     * Condition is passed by the dispatcher, usually when the task is run in an HTTP context
+     *
+     * @return boolean
+     */
+    public function shouldStop();
+
+    /**
      * Signals the task completion
      *
      * @return int

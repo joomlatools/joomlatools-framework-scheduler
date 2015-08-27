@@ -64,6 +64,27 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     abstract public function run();
 
     /**
+     * Signals that the task should save state and call suspend as soon as possible if true
+     *
+     * Condition is passed by the dispatcher, usually when the task is run in an HTTP context
+     *
+     * @return boolean
+     */
+    public function shouldStop()
+    {
+        $return = false;
+
+        if (is_callable($this->getConfig()->should_stop))
+        {
+            /** @var callable $callable */
+            $callable = $this->getConfig()->should_stop;
+            $return   = $callable();
+        }
+
+        return $return;
+    }
+
+    /**
      * Signals the task completion
      *
      * @return int

@@ -23,10 +23,16 @@ var_dump($queue);
 
             var_dump('created queue');
         }
-        elseif (is_array($queue)) {
-            $first = array_shift($queue);
+        elseif (is_array($queue))
+        {
+            while (!$this->shouldStop() && count($queue))
+            {
+                $first = array_shift($queue);
 
-            var_dump('create doc'.$first);
+                var_dump('create doc'.$first);
+                sleep(2);
+            }
+
         }
 
         $state->queue = $queue;
