@@ -15,7 +15,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherInterface
+class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDispatcherInterface
 {
     /**
      * @var KModelInterface
@@ -30,6 +30,10 @@ class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherIn
         parent::__construct($config);
 
         $this->setModel($config->model);
+
+        @set_time_limit(0);
+        @ini_set('memory_limit', '256M');
+        @ignore_user_abort(true);
     }
 
     /**
@@ -48,9 +52,9 @@ class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherIn
     {
         if ($this->canRun())
         {
-            $task   = $this->_getFirstRunnableTask();
+            $task = $this->_getFirstRunnableTask();
 
-            if ($task->isNew()) {
+            if (!$task) {
                 return;
             }
 
@@ -91,6 +95,20 @@ class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherIn
         }
     }
 
+    public function isDue($task)
+    {
+        $result = true;
+
+        if ($task->completed_on !== '0000-00-00 00:00:00')
+        {
+            $cron = Cron\CronExpression::factory($task->frequency);
+
+            $result = $cron->getNextRunDate($task->completed_on) < new DateTime('now');
+        }
+
+        return $result;
+    }
+
     public function canRun()
     {
         $this->_quitStaleTasks();
@@ -98,7 +116,7 @@ class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherIn
         $result = !$this->getModel()->status(1)->count();
 
         if ($result) {
-            $result = $this->getModel()->due(1)->status(0)->count();
+            $result = (bool)$this->_getFirstRunnableTask();
         }
 
         return $result;
@@ -106,48 +124,50 @@ class ComSchedulerDispatcher extends KObject implements ComSchedulerDispatcherIn
 
     protected function _quitStaleTasks()
     {
-        $active = $this->getModel()->status(1)->fetch();
+        $stale = $this->getModel()->stale(1)->fetch();
 
-        foreach ($active as $task)
+        if (count($stale))
         {
-            $modified = new DateTime($task->modified_on);
-
-            // check if the task has been running for more than 2 minutes
-            if (time() - $modified->format('U') > 120) {
-                $task->status = 0;
-                $task->save();
+            foreach ($stale as $entity) {
+                $entity->status = 0;
             }
+
+            $stale->save();
         }
     }
 
     protected function _getFirstRunnableTask()
     {
-        $state = array(
-            'queue'  => 1,
-            'due'    => 1,
-            'status' => 0,
-            'limit'  => 1,
-            'sort'   => 'ordering'
-        );
+        $high_priority = $this->getModel()->status(0)->sort('ordering')->queue(1)->fetch();
 
-        $task = $this->getModel()->setState($state)->fetch();
-
-        if ($task->isNew())
+        if (count($high_priority) === 0)
         {
-            $low = $this->getModel()->setState($state)->queue(0)->fetch();
+            $low_priority = $this->getModel()->status(0)->sort('ordering')->queue(0)->fetch();
 
-            if (!$low->isNew())
+            foreach ($low_priority as $task)
             {
-                $low->queue = 1;
-                $low->ordering = -PHP_INT_MAX;
+                if ($this->isDue($task))
+                {
+                    $task->queue = 1;
+                    $task->ordering = -PHP_INT_MAX;
 
-                if ($low->save()) {
-                    $task = $low;
+                    if ($task->save()) {
+                        return $task;
+                    }
+                }
+            }
+        }
+        else {
+            foreach ($high_priority as $task)
+            {
+                if ($this->isDue($task))
+                {
+                    return $task;
                 }
             }
         }
 
-        return $task;
+        return null;
     }
 
     public function getModel()

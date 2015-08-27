@@ -13,7 +13,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-interface ComSchedulerDispatcherInterface
+interface ComSchedulerTaskDispatcherInterface
 {
     public function run();
 

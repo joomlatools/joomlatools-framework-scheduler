@@ -94,9 +94,9 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns the task frequency in minutes
+     * Returns the task frequency in cron expression
      *
-     * @return int
+     * @return string
      */
     public function getFrequency()
     {

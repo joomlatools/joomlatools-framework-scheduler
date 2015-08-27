@@ -21,10 +21,11 @@ interface ComSchedulerTaskInterface
     const TASK_COMPLETE = 0;
     const TASK_SUSPEND  = -1;
 
-    const FREQUENCY_HOURLY  = 60;
-    const FREQUENCY_DAILY   = 1440;
-    const FREQUENCY_WEEKLY  = 10080;
-    const FREQUENCY_MONTHLY = 43200;
+    const FREQUENCY_HOURLY  = '0 * * * *';
+    const FREQUENCY_DAILY   = '0 0 * * *';
+    const FREQUENCY_WEEKLY  = '0 0 * * 0';
+    const FREQUENCY_MONTHLY = '0 0 1 * *';
+    const FREQUENCY_YEARLY  = '0 0 1 1 *';
 
     /**
      * Runs the task
@@ -55,9 +56,9 @@ interface ComSchedulerTaskInterface
     public function getPriority();
 
     /**
-     * Returns the task frequency in minutes
+     * Returns the task frequency in cron expression
      *
-     * @return int
+     * @return string
      */
     public function getFrequency();
 
