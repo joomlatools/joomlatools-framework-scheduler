@@ -53,6 +53,7 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
         if ($task = $this->_getFirstRunnableTask())
         {
             $time = time();
+            $result = false;
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
                 'should_stop' => function() use ($time) {
@@ -90,13 +91,33 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
             catch (Exception $e) {
             }
 
-            $task->status = 0;
-            $task->save();
+            if ($result === ComSchedulerTaskInterface::TASK_COMPLETE && !$this->getNextRun($task)) {
+                $task->delete();
+            }
+            else {
+                $task->status = 0;
+                $task->save();
+            }
 
             return true;
         }
 
         return false;
+    }
+
+    public function getNextRun($task)
+    {
+        $result = false;
+
+        try {
+            $cron   = Cron\CronExpression::factory($task->frequency);
+            $result = $cron->getNextRunDate();
+        }
+        catch (RuntimeException $e) {
+            // never gonna run again :(
+        }
+
+        return $result;
     }
 
     public function isDue($task)
@@ -105,9 +126,16 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
         if ($task->completed_on !== '0000-00-00 00:00:00')
         {
-            $cron = Cron\CronExpression::factory($task->frequency);
-
-            $result = $cron->getNextRunDate($task->completed_on) < new DateTime('now');
+            try {
+                $cron   = Cron\CronExpression::factory($task->frequency);
+                $result = $cron->getNextRunDate($task->completed_on) < new DateTime('now');
+            }
+            catch (RuntimeException $e) {
+                $result = true; // last run and it'll be deleted
+            }
+            catch (Exception $e) {
+                $result = false;
+            }
         }
 
         return $result;
