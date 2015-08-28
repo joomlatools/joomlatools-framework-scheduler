@@ -17,8 +17,6 @@ interface ComSchedulerTaskDispatcherInterface
 {
     public function run();
 
-    public function canRun();
-
     public function getModel();
 
     public function setModel($model);

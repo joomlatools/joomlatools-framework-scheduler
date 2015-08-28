@@ -50,14 +50,8 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
     public function run()
     {
-        if ($this->canRun())
+        if ($task = $this->_getFirstRunnableTask())
         {
-            $task = $this->_getFirstRunnableTask();
-
-            if (!$task) {
-                return;
-            }
-
             $time = time();
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
@@ -98,7 +92,11 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
             $task->status = 0;
             $task->save();
+
+            return true;
         }
+
+        return false;
     }
 
     public function isDue($task)
@@ -110,19 +108,6 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
             $cron = Cron\CronExpression::factory($task->frequency);
 
             $result = $cron->getNextRunDate($task->completed_on) < new DateTime('now');
-        }
-
-        return $result;
-    }
-
-    public function canRun()
-    {
-        $this->_quitStaleTasks();
-
-        $result = !$this->getModel()->status(1)->count();
-
-        if ($result) {
-            $result = (bool)$this->_getFirstRunnableTask();
         }
 
         return $result;
@@ -144,6 +129,12 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
     protected function _getFirstRunnableTask()
     {
+        $this->_quitStaleTasks();
+
+        if ($this->getModel()->status(1)->count()) {
+            return null;
+        }
+
         $high_priority = $this->getModel()->status(0)->sort('ordering')->queue(1)->fetch();
 
         if (count($high_priority) === 0)
@@ -155,7 +146,6 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
                 if ($this->isDue($task))
                 {
                     $task->queue = 1;
-                    $task->ordering = -PHP_INT_MAX;
 
                     if ($task->save()) {
                         return $task;
@@ -163,11 +153,11 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
                 }
             }
         }
-        else {
+        else
+        {
             foreach ($high_priority as $task)
             {
-                if ($this->isDue($task))
-                {
+                if ($this->isDue($task)) {
                     return $task;
                 }
             }
