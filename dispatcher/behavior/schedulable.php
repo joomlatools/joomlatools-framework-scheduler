@@ -26,7 +26,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
             'model'      => 'com:scheduler.model.tasks',
             'table_name' => 'docman_tasks',
             'condition'  => function($context) {
-                return $context->request->query->has('scheduler');
+                return $context->request->query->view === 'documents';
             }
         ));
 
@@ -38,9 +38,8 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
         try {
             $condition = $this->getConfig()->condition;
 
-            if (is_callable($condition) && $condition($context))
+            if ($context->request->query->has('scheduler'))
             {
-                $this->syncTasks();
 
                 $dispatcher = $this->getTaskDispatcher();
 
@@ -56,6 +55,11 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
                 }
 
                 die;
+            }
+            else if (is_callable($condition) && $condition($context)) {
+                $this->getController()->getView()->addBehavior('com:scheduler.view.behavior.schedulable');
+
+                $this->syncTasks();
             }
         }
         catch (Exception $e) {

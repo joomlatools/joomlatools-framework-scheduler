@@ -56,6 +56,7 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
             $result = false;
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
+                'time_limit'  => time()+10,
                 'should_stop' => function() use ($time) {
                     return time() > $time+5;
                 }
