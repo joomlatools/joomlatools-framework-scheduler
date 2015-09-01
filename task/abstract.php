@@ -64,24 +64,32 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     abstract public function run();
 
     /**
-     * Signals that the task should save state and call suspend as soon as possible if true
+     * Returns if the task has time left to run.
+     * If the method returns false the task should save state and call suspend as soon as possible.
      *
-     * Condition is passed by the dispatcher, usually when the task is run in an HTTP context
+     * Condition is passed by the dispatcher, usually only when the task is run in an HTTP context
      *
      * @return boolean
      */
-    public function shouldStop()
+    public function hasTimeLeft()
     {
-        $return = false;
+        $result = true;
 
-        if (is_callable($this->getConfig()->should_stop))
-        {
-            /** @var callable $callable */
-            $callable = $this->getConfig()->should_stop;
-            $return   = $callable();
+        if ($this->getConfig()->stop_on) {
+            $result = time() < $this->getConfig()->stop_on;
         }
 
-        return $return;
+        return $result;
+    }
+
+    /**
+     * Returns the remaining time for the task to run
+     *
+     * @return int
+     */
+    public function getTimeLeft()
+    {
+        return max($this->getConfig()->stop_on - time(), 0);
     }
 
     /**

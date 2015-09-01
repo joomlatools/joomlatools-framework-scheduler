@@ -25,7 +25,7 @@ var_dump($queue);
         }
         elseif (is_array($queue))
         {
-            while (!$this->shouldStop() && count($queue))
+            while ($this->hasTimeLeft() && count($queue))
             {
                 $first = array_shift($queue);
 
