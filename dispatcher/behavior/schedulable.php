@@ -53,15 +53,31 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
 
                 return false;
             }
-            else if ($context->request->getFormat() === 'html' && (is_callable($condition) && $condition($context))) {
-                $this->getController()->getView()->addBehavior('com:scheduler.view.behavior.schedulable');
-
+            else if ($context->request->getFormat() === 'html' && (is_callable($condition) && $condition($context)))
+            {
+                $javascript = $this->_renderJavascript();
+                $this->getController()->getView()->addCommandCallback('after.render', function($context) use ($javascript) {
+                    $context->result .= $javascript;
+                });
                 $this->syncTasks();
             }
         }
         catch (Exception $e) {
             die($e->getMessage());
         }
+    }
+
+    protected function _renderJavascript()
+    {
+        $url = $this->getObject('request')->getUrl()->setQuery(array('scheduler' => 1, 'format' => 'json'), true);
+        // encodeURIComponent replacement
+        $url = strtr(rawurlencode($url), array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'));
+
+        $code = $this->getObject('com:scheduler.view.default.html')->getTemplate()
+            ->loadString('<script data-inline type="text/javascript" src="assets://scheduler/js/request.js?url='.$url.'"></script>', 'php')
+            ->render();
+
+        return $code;
     }
 
     /**

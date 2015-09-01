@@ -175,7 +175,7 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
     {
         $identifier = $task ? (string) $task->getIdentifier() : 'dispatcher';
 
-        if (!is_array($this->_logs[$identifier])) {
+        if (!isset($this->_logs[$identifier])) {
             $this->_logs[$identifier] = array();
         }
 
