@@ -53,7 +53,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
 
                 return false;
             }
-            else if (is_callable($condition) && $condition($context)) {
+            else if ($context->request->getFormat() === 'html' && (is_callable($condition) && $condition($context))) {
                 $this->getController()->getView()->addBehavior('com:scheduler.view.behavior.schedulable');
 
                 $this->syncTasks();
