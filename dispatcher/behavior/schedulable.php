@@ -45,7 +45,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
 
                 while (true)
                 {
-                    if ($dispatcher->run()) {
+                    if ($dispatcher->dispatch()) {
                         break;
                     }
                     else {

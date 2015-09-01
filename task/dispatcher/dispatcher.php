@@ -48,18 +48,14 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
         parent::_initialize($config);
     }
 
-    public function run()
+    public function dispatch()
     {
         if ($task = $this->_getFirstRunnableTask())
         {
-            $time = time();
             $result = false;
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
-                'time_limit'  => time()+10,
-                'should_stop' => function() use ($time) {
-                    return time() > $time+5;
-                }
+                'stop_on'     => time()+4
             ));
 
             $task->status = 1;

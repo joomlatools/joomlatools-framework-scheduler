@@ -15,7 +15,7 @@
  */
 interface ComSchedulerTaskDispatcherInterface
 {
-    public function run();
+    public function dispatch();
 
     public function getModel();
 
