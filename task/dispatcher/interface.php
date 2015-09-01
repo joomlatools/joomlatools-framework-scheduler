@@ -15,7 +15,34 @@
  */
 interface ComSchedulerTaskDispatcherInterface
 {
+    /**
+     * Dispatches the next task in line
+     *
+     * @return bool
+     */
     public function dispatch();
+
+    /**
+     * Picks the next task to run based on priority
+     *
+     * @return null|KDatabaseRowInterface
+     */
+    public function pickNextTask();
+
+    /**
+     * Logs a message for debugging purposes
+     *
+     * @param $message
+     * @param $task KObjectInterface|null
+     */
+    public function log($message, $task = null);
+
+    /**
+     * Returns the logs
+     *
+     * @return array
+     */
+    public function getLogs();
 
     public function getModel();
 

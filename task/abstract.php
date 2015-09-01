@@ -36,15 +36,24 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
      */
     protected $_frequency;
 
+    /**
+     * A logger passed by the task dispatcher
+     *
+     * @var callable
+     */
+    protected $_logger;
+
     public function __construct(KObjectConfig $config)
     {
         parent::__construct($config);
 
-        $this->_priority = $config->priority;
+        $this->_priority  = $config->priority;
 
-        $this->_state = $config->state;
+        $this->_state     = $config->state;
 
         $this->_frequency = $config->frequency;
+
+        $this->_logger    = $config->logger;
     }
 
     protected function _initialize(KObjectConfig $config)
@@ -62,6 +71,18 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
      * @return int The result of $this->complete() or $this->suspend()
      */
     abstract public function run();
+
+    /**
+     * Logs a message for debugging purposes
+     *
+     * @param $message string
+     */
+    public function log($message)
+    {
+        if (is_callable($this->_logger)) {
+            call_user_func($this->_logger, $message, $this);
+        }
+    }
 
     /**
      * Returns if the task has time left to run.

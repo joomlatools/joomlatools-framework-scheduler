@@ -11,8 +11,6 @@ class ComSchedulerTaskFoobar extends ComSchedulerTaskAbstract
 {
     public function run()
     {
-        var_dump('foobar');
-
         return $this->complete();
     }
 }

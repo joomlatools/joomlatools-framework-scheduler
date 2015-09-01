@@ -12,16 +12,16 @@ class ComSchedulerTaskCreate_documents extends ComSchedulerTaskAbstract
 {
     public function run()
     {
-        var_dump('create docs');
-
         $state = $this->getState();
         $queue = KObjectConfig::unbox($state->queue);
-var_dump($queue);
+
+        $this->log('queue is '.implode(',', $queue));
+
         if (empty($queue))
         {
             $queue = array(1,2,3,4,5);
 
-            var_dump('created queue');
+            $this->log('created queue');
         }
         elseif (is_array($queue))
         {
@@ -29,7 +29,7 @@ var_dump($queue);
             {
                 $first = array_shift($queue);
 
-                var_dump('create doc'.$first);
+                $this->log('create doc'.$first);
                 sleep(2);
             }
 

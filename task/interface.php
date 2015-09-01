@@ -35,6 +35,13 @@ interface ComSchedulerTaskInterface
     public function run();
 
     /**
+     * Logs a message for debugging purposes
+     *
+     * @param $message string
+     */
+    public function log($message);
+
+    /**
      * Returns if the task has time left to run.
      * If the method returns false the task should save state and call suspend as soon as possible.
      *

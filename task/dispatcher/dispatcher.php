@@ -23,6 +23,11 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
     protected $_model;
 
     /**
+     * @var array
+     */
+    protected $_logs = array();
+
+    /**
      * @param KObjectConfig $config
      */
     public function __construct(KObjectConfig $config)
@@ -48,22 +53,34 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
         parent::_initialize($config);
     }
 
+    /**
+     * Dispatches the next task in line
+     *
+     * @return bool
+     */
     public function dispatch()
     {
-        if ($task = $this->_getFirstRunnableTask())
+        if ($task = $this->pickNextTask())
         {
             $result = false;
+
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
-                'stop_on'     => time()+4
+                'stop_on'     => time()+4,
+                'logger'      => array($this, 'log')
             ));
 
+            // Set to running
             $task->status = 1;
             $task->save();
 
             try
             {
+                $this->log('dispatch task', $runner);
+
                 $result = $runner->run();
+
+                $this->log('result: '.$result, $runner);
 
                 /*
                 complete:
@@ -88,10 +105,11 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
             catch (Exception $e) {
             }
 
-            if ($result === ComSchedulerTaskInterface::TASK_COMPLETE && !$this->getNextRun($task)) {
+            if ($result === ComSchedulerTaskInterface::TASK_COMPLETE && !$this->_getNextRun($task)) {
                 $task->delete();
             }
             else {
+                // Stop the task
                 $task->status = 0;
                 $task->save();
             }
@@ -102,22 +120,97 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
         return false;
     }
 
-    public function getNextRun($task)
+    /**
+     * Picks the next task to run based on priority
+     *
+     * @return null|KDatabaseRowInterface
+     */
+    public function pickNextTask()
     {
-        $result = false;
+        $this->_quitStaleTasks();
 
-        try {
-            $cron   = Cron\CronExpression::factory($task->frequency);
-            $result = $cron->getNextRunDate();
-        }
-        catch (RuntimeException $e) {
-            // never gonna run again :(
+        if ($this->getModel()->status(1)->count() === 0)
+        {
+            $high_priority = $this->getModel()->status(0)->sort('ordering')->queue(1)->fetch();
+
+            if (count($high_priority) === 0)
+            {
+                $low_priority = $this->getModel()->status(0)->sort('ordering')->queue(0)->fetch();
+
+                foreach ($low_priority as $task)
+                {
+                    if ($this->_isDue($task))
+                    {
+                        $task->queue = 1;
+
+                        if ($task->save()) {
+                            return $task;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach ($high_priority as $task)
+                {
+                    if ($this->_isDue($task)) {
+                        return $task;
+                    }
+                }
+            }
         }
 
-        return $result;
+
+
+        return null;
     }
 
-    public function isDue($task)
+    /**
+     * Logs a message for debugging purposes
+     *
+     * @param $message
+     * @param $task KObjectInterface|null
+     */
+    public function log($message, $task = null)
+    {
+        $identifier = $task ? (string) $task->getIdentifier() : 'dispatcher';
+
+        if (!is_array($this->_logs[$identifier])) {
+            $this->_logs[$identifier] = array();
+        }
+
+        $this->_logs[$identifier][] = (object) array('message' => $message, 'timestamp' => time());
+    }
+
+    /**
+     * Returns the logs
+     *
+     * @return array
+     */
+    public function getLogs()
+    {
+        return $this->_logs;
+    }
+
+    public function getModel()
+    {
+        $this->_model->getState()->reset();
+
+        return $this->_model;
+    }
+
+    public function setModel($model)
+    {
+        if(!$model instanceof KModelInterface) {
+            $model = $this->getObject($model);
+        }
+
+        $this->_model = $model;
+
+        return $this;
+    }
+
+    protected function _isDue($task)
     {
         $result = true;
 
@@ -138,6 +231,21 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
         return $result;
     }
 
+    protected function _getNextRun($task)
+    {
+        $result = false;
+
+        try {
+            $cron   = Cron\CronExpression::factory($task->frequency);
+            $result = $cron->getNextRunDate();
+        }
+        catch (RuntimeException $e) {
+            // never gonna run again :(
+        }
+
+        return $result;
+    }
+
     protected function _quitStaleTasks()
     {
         $stale = $this->getModel()->stale(1)->fetch();
@@ -150,62 +258,5 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
             $stale->save();
         }
-    }
-
-    protected function _getFirstRunnableTask()
-    {
-        $this->_quitStaleTasks();
-
-        if ($this->getModel()->status(1)->count()) {
-            return null;
-        }
-
-        $high_priority = $this->getModel()->status(0)->sort('ordering')->queue(1)->fetch();
-
-        if (count($high_priority) === 0)
-        {
-            $low_priority = $this->getModel()->status(0)->sort('ordering')->queue(0)->fetch();
-
-            foreach ($low_priority as $task)
-            {
-                if ($this->isDue($task))
-                {
-                    $task->queue = 1;
-
-                    if ($task->save()) {
-                        return $task;
-                    }
-                }
-            }
-        }
-        else
-        {
-            foreach ($high_priority as $task)
-            {
-                if ($this->isDue($task)) {
-                    return $task;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public function getModel()
-    {
-        $this->_model->getState()->reset();
-
-        return $this->_model;
-    }
-
-    public function setModel($model)
-    {
-        if(!$model instanceof KModelInterface) {
-            $model = $this->getObject($model);
-        }
-
-        $this->_model = $model;
-
-        return $this;
     }
 }

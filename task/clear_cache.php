@@ -19,8 +19,6 @@ class ComSchedulerTaskClear_cache extends ComSchedulerTaskAbstract
 
     public function run()
     {
-        var_dump('clear cache');
-
         return $this->complete();
     }
 }

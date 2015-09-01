@@ -40,21 +40,18 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
 
             if ($context->request->query->has('scheduler'))
             {
-
                 $dispatcher = $this->getTaskDispatcher();
+                $dispatcher->dispatch();
 
-                while (true)
-                {
-                    if ($dispatcher->dispatch()) {
-                        break;
-                    }
-                    else {
-                        break;
-                        //sleep(60);
-                    }
-                }
+                $result = new stdClass();
+                $result->continue = (bool) $dispatcher->pickNextTask();
+                /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+                $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
 
-                die;
+                $context->response->setContent(json_encode($result), 'application/json');
+                $this->getMixer()->send($context);
+
+                return false;
             }
             else if (is_callable($condition) && $condition($context)) {
                 $this->getController()->getView()->addBehavior('com:scheduler.view.behavior.schedulable');
@@ -67,6 +64,10 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
         }
     }
 
+    /**
+     *
+     * @return ComSchedulerTaskDispatcherInterface
+     */
     public function getTaskDispatcher()
     {
         $config = $this->getConfig();

@@ -16,7 +16,7 @@ class ComSchedulerViewBehaviorSchedulable extends KViewBehaviorAbstract
 
         $code = $template->loadFile('com:scheduler.behavior.schedule.html')
             ->render(array(
-                'url'        => (string)$this->getRoute(array('component' => 'docman', 'scheduler' => 1, 'format' => 'json')),
+                'url'        => (string)$this->getRoute(array('component' => 'docman', 'scheduler' => 1, 'format' => 'json'), true, false),
                 'csrf_token' => $this->getObject('user')->getSession()->getToken()
             ));
 

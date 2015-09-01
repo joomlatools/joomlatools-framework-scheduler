@@ -12,14 +12,13 @@ defined('KOOWA') or die; ?>
 <?= helper('behavior.jquery'); ?>
 
 <script type="text/javascript">
-    var csrf_token = <?= json_encode($csrf_token); ?>;
-
-    kQuery.ajax(<?= json_encode($url); ?>)
-        .success(function(response, status, xhr) {
-            console.log(response);
-        })
-        .fail(function(xhr) {
-            console.log(response);
+    var request = function() {
+        return kQuery.ajax(<?= json_encode($url); ?>).success(function(response) {
+            if (typeof response === 'object' && response.continue) {
+                setTimeout(request, 1000);
+            }
         });
+    };
 
+    request();
 </script>
