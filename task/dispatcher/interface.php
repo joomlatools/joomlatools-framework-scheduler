@@ -44,7 +44,18 @@ interface ComSchedulerTaskDispatcherInterface
      */
     public function getLogs();
 
+    /**
+     * Returns the current model after resetting its state
+     *
+     * @return KModelInterface
+     */
     public function getModel();
 
+    /**
+     * Sets the model
+     *
+     * @param $model string|KModelInterface
+     * @return $this
+     */
     public function setModel($model);
 }

@@ -37,8 +37,18 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
         $this->setModel($config->model);
     }
 
+    /**
+     * Dispatches the next task in line
+     *
+     * @return bool
+     */
     abstract public function dispatch();
 
+    /**
+     * Picks the next task to run based on priority
+     *
+     * @return null|KDatabaseRowInterface
+     */
     abstract public function pickNextTask();
 
     /**
@@ -80,6 +90,11 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
         return $this->_logs;
     }
 
+    /**
+     * Returns the current model after resetting its state
+     *
+     * @return KModelInterface
+     */
     public function getModel()
     {
         $this->_model->getState()->reset();
@@ -87,6 +102,12 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
         return $this->_model;
     }
 
+    /**
+     * Sets the model
+     *
+     * @param $model string|KModelInterface
+     * @return $this
+     */
     public function setModel($model)
     {
         if(!$model instanceof KModelInterface) {
