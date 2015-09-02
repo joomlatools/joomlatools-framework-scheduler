@@ -13,7 +13,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstract
+class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstract
 {
     /**
      * @throws RuntimeException
@@ -46,28 +46,32 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
     }
 
     /**
-     * Runs the scheduler or adds the JavaScript trigger
+     * Runs the task dispatcher and ends the request if the request has scheduler=1
+     *
      * @param KDispatcherContextInterface $context
      * @return bool
      * @throws Exception
      */
     protected function _beforeDispatch(KDispatcherContextInterface $context)
     {
-        try {
+        try
+        {
             if ($context->request->query->has('scheduler'))
             {
-                $this->_runTaskDispatcher($context);
+                $this->syncTasks();
+
+                $dispatcher = $this->getTaskDispatcher();
+                $dispatcher->dispatch();
+
+                $result = new stdClass();
+                $result->continue = (bool) $dispatcher->pickNextTask();
+                /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+                $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
+
+                $context->response->setContent(json_encode($result), 'application/json');
+                $this->send($context);
 
                 return false;
-            }
-
-            if ($context->getRequest()->getFormat() === 'html' && $context->getRequest()->isGet())
-            {
-                $trigger_condition = $this->getConfig()->trigger_condition;
-
-                if (is_callable($trigger_condition) && $trigger_condition($context)) {
-                    $this->_addTrigger($context);
-                }
             }
         }
         catch (Exception $e)
@@ -82,50 +86,50 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
     }
 
     /**
-     * Runs the task dispatcher and ends the request
-     *
-     * @param KDispatcherContextInterface $context
-     */
-    protected function _runTaskDispatcher(KDispatcherContextInterface $context)
-    {
-        $dispatcher = $this->getTaskDispatcher();
-        $dispatcher->dispatch();
-
-        $result = new stdClass();
-        $result->continue = (bool) $dispatcher->pickNextTask();
-        /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
-        $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
-
-        $context->response->setContent(json_encode($result), 'application/json');
-
-        $this->send($context);
-    }
-
-    /**
      * Adds the Javascript trigger code to the current view output
      *
      * @param KDispatcherContextInterface $context
+     * @throws Exception
      */
-    protected function _addTrigger(KDispatcherContextInterface $context)
+    protected function _beforeGet(KDispatcherContextInterface $context)
     {
-        $url = $this->getObject('request')->getUrl()->setQuery(array('scheduler' => 1, 'format' => 'json'), true);
-        // encodeURIComponent replacement
-        $url = strtr(rawurlencode($url), array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'));
+        try
+        {
+            if ($context->getRequest()->getFormat() === 'html')
+            {
+                $view      = $this->getController()->getView();
+                $condition = $this->getConfig()->trigger_condition;
 
-        $html = '<script data-inline
+                if ($view instanceof KViewHtml && is_callable($condition) && $condition($context))
+                {
+                    $this->syncTasks();
+
+                    // Create URL and encode using encodeURIComponent standards
+                    $url = $this->getObject('request')->getUrl()->setQuery(array('scheduler' => 1, 'format' => 'json'), true);
+                    $url = strtr(rawurlencode($url), array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'));
+
+                    $html = '<script data-inline
                          data-scheduler='.$url.'
                          type="text/javascript"
-                         src="assets://scheduler/js/request.js"></script>';
+                         src="media://koowa/com_scheduler/js/request.js"></script>';
 
-        $html = $this->getObject('com:scheduler.view.default.html')->getTemplate()
-            ->loadString($html, 'php')
-            ->render();
+                    $html = $this->getObject('com:scheduler.view.default.html')->getTemplate()
+                        ->loadString($html, 'php')
+                        ->render();
 
-        $this->getController()->getView()->addCommandCallback('after.render', function($context) use ($html) {
-            $context->result .= $html;
-        });
-
-        $this->syncTasks();
+                    $view->addCommandCallback('after.render', function($context) use ($html) {
+                        $context->result .= $html;
+                    });
+                }
+            }
+        }
+        catch (Exception $e)
+        {
+            /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+            if (KClassLoader::getInstance()->isDebug()) {
+                throw $e;
+            }
+        }
     }
 
     /**

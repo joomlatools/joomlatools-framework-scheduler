@@ -15,7 +15,7 @@ class ComSchedulerTaskCreate_documents extends ComSchedulerTaskAbstract
         $state = $this->getState();
         $queue = KObjectConfig::unbox($state->queue);
 
-        $this->log('queue is '.implode(',', $queue));
+        $this->log('docs in queue: '.count($queue));
 
         if (empty($queue))
         {
