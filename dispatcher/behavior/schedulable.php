@@ -73,8 +73,13 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
         // encodeURIComponent replacement
         $url = strtr(rawurlencode($url), array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'));
 
+        $html = '<script data-inline
+                         data-scheduler='.$url.'
+                         type="text/javascript"
+                         src="assets://scheduler/js/request.js"></script>';
+
         $code = $this->getObject('com:scheduler.view.default.html')->getTemplate()
-            ->loadString('<script data-inline type="text/javascript" src="assets://scheduler/js/request.js?url='.$url.'"></script>', 'php')
+            ->loadString($html, 'php')
             ->render();
 
         return $code;
