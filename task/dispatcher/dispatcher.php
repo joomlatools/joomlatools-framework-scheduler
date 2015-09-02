@@ -15,18 +15,8 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDispatcherInterface
+class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
 {
-    /**
-     * @var KModelInterface
-     */
-    protected $_model;
-
-    /**
-     * @var array
-     */
-    protected $_logs = array();
-
     /**
      * @param KObjectConfig $config
      */
@@ -34,23 +24,9 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
     {
         parent::__construct($config);
 
-        $this->setModel($config->model);
-
         @set_time_limit(60);
         @ini_set('memory_limit', '256M');
         @ignore_user_abort(true);
-    }
-
-    /**
-     * @param KObjectConfig $config
-     */
-    protected function _initialize(KObjectConfig $config)
-    {
-        $config->append(array(
-            'model' => 'com:scheduler.model.tasks'
-        ));
-
-        parent::_initialize($config);
     }
 
     /**
@@ -163,51 +139,6 @@ class ComSchedulerTaskDispatcher extends KObject implements ComSchedulerTaskDisp
 
 
         return null;
-    }
-
-    /**
-     * Logs a message for debugging purposes
-     *
-     * @param $message
-     * @param $task KObjectInterface|null
-     */
-    public function log($message, $task = null)
-    {
-        $identifier = $task ? (string) $task->getIdentifier() : 'dispatcher';
-
-        if (!isset($this->_logs[$identifier])) {
-            $this->_logs[$identifier] = array();
-        }
-
-        $this->_logs[$identifier][] = (object) array('message' => $message, 'timestamp' => time());
-    }
-
-    /**
-     * Returns the logs
-     *
-     * @return array
-     */
-    public function getLogs()
-    {
-        return $this->_logs;
-    }
-
-    public function getModel()
-    {
-        $this->_model->getState()->reset();
-
-        return $this->_model;
-    }
-
-    public function setModel($model)
-    {
-        if(!$model instanceof KModelInterface) {
-            $model = $this->getObject($model);
-        }
-
-        $this->_model = $model;
-
-        return $this;
     }
 
     protected function _isDue($task)
