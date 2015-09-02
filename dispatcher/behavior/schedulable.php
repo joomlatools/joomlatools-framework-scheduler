@@ -102,8 +102,6 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
 
                 if ($view instanceof KViewHtml && is_callable($condition) && $condition($context))
                 {
-                    $this->syncTasks();
-
                     // Create URL and encode using encodeURIComponent standards
                     $url = $this->getObject('request')->getUrl()->setQuery(array('scheduler' => 1, 'format' => 'json'), true);
                     $url = strtr(rawurlencode($url), array('%21'=>'!', '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'));
