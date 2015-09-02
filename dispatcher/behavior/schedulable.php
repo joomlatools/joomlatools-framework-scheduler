@@ -15,59 +15,98 @@
  */
 class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstract
 {
+    /**
+     * @throws RuntimeException
+     * @param KObjectConfig $config
+     */
+    public function __construct(KObjectConfig $config)
+    {
+        parent::__construct($config);
+
+        if (!$this->getConfig()->table_name) {
+            throw new RuntimeException('Tasks table name cannot be empty');
+        }
+    }
+
+    /**
+     * Set defaults
+     *
+     * @param KObjectConfig $config
+     */
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'tasks' => array(
-                'com:scheduler.task.clear_cache',
-                'com:scheduler.task.foobar' => array('frequency' => '* * * * * *'),
-                'com:scheduler.task.create_documents'
-            ),
+            'table_name' => null,
+            'tasks'      => array(),
             'model'      => 'com:scheduler.model.tasks',
-            'table_name' => 'docman_tasks',
-            'condition'  => function($context) {
-                return $context->request->query->view === 'documents';
-            }
+            'trigger_condition' => null
         ));
 
         parent::_initialize($config);
     }
 
+    /**
+     * Runs the scheduler or adds the JavaScript trigger
+     * @param KDispatcherContextInterface $context
+     * @return bool
+     * @throws Exception
+     */
     protected function _beforeDispatch(KDispatcherContextInterface $context)
     {
         try {
-            $condition = $this->getConfig()->condition;
-
             if ($context->request->query->has('scheduler'))
             {
-                $dispatcher = $this->getTaskDispatcher();
-                $dispatcher->dispatch();
-
-                $result = new stdClass();
-                $result->continue = (bool) $dispatcher->pickNextTask();
-                /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
-                $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
-
-                $context->response->setContent(json_encode($result), 'application/json');
-                $this->getMixer()->send($context);
+                $this->_runTaskDispatcher($context);
 
                 return false;
             }
-            else if ($context->request->getFormat() === 'html' && (is_callable($condition) && $condition($context)))
+
+            if ($context->getRequest()->getFormat() === 'html' && $context->getRequest()->isGet())
             {
-                $javascript = $this->_renderJavascript();
-                $this->getController()->getView()->addCommandCallback('after.render', function($context) use ($javascript) {
-                    $context->result .= $javascript;
-                });
-                $this->syncTasks();
+                $trigger_condition = $this->getConfig()->trigger_condition;
+
+                if (is_callable($trigger_condition) && $trigger_condition($context)) {
+                    $this->_addTrigger($context);
+                }
             }
         }
-        catch (Exception $e) {
-            die($e->getMessage());
+        catch (Exception $e)
+        {
+            /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+            if (KClassLoader::getInstance()->isDebug()) {
+                throw $e;
+            }
         }
+
+        return true;
     }
 
-    protected function _renderJavascript()
+    /**
+     * Runs the task dispatcher and ends the request
+     *
+     * @param KDispatcherContextInterface $context
+     */
+    protected function _runTaskDispatcher(KDispatcherContextInterface $context)
+    {
+        $dispatcher = $this->getTaskDispatcher();
+        $dispatcher->dispatch();
+
+        $result = new stdClass();
+        $result->continue = (bool) $dispatcher->pickNextTask();
+        /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+        $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
+
+        $context->response->setContent(json_encode($result), 'application/json');
+
+        $this->send($context);
+    }
+
+    /**
+     * Adds the Javascript trigger code to the current view output
+     *
+     * @param KDispatcherContextInterface $context
+     */
+    protected function _addTrigger(KDispatcherContextInterface $context)
     {
         $url = $this->getObject('request')->getUrl()->setQuery(array('scheduler' => 1, 'format' => 'json'), true);
         // encodeURIComponent replacement
@@ -78,14 +117,19 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
                          type="text/javascript"
                          src="assets://scheduler/js/request.js"></script>';
 
-        $code = $this->getObject('com:scheduler.view.default.html')->getTemplate()
+        $html = $this->getObject('com:scheduler.view.default.html')->getTemplate()
             ->loadString($html, 'php')
             ->render();
 
-        return $code;
+        $this->getController()->getView()->addCommandCallback('after.render', function($context) use ($html) {
+            $context->result .= $html;
+        });
+
+        $this->syncTasks();
     }
 
     /**
+     * Returns the task dispatcher
      *
      * @return ComSchedulerTaskDispatcherInterface
      */
@@ -100,6 +144,12 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
         ));
     }
 
+    /**
+     * Syncs the tasks passed into the object config to the database
+     *
+     * Automatically creates the database table if necessary
+     * Also handles task frequency updates
+     */
     public function syncTasks()
     {
         try {
@@ -107,6 +157,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KDispatcherBehaviorAbstr
         }
         catch (RuntimeException $e)
         {
+
             $adapter = $this->getObject('database.adapter.mysqli');
             $content = file_get_contents(__DIR__.'/../../resources/install/template.sql');
             $content = sprintf($content, $adapter->getTablePrefix().$this->getConfig()->table_name);
