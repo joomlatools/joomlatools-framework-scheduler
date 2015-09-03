@@ -53,7 +53,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
 
         $this->_frequency = $config->frequency;
 
-        $this->_logger    = $config->logger;
+        $this->_logger    = KObjectConfig::unbox($config->logger);
     }
 
     protected function _initialize(KObjectConfig $config)

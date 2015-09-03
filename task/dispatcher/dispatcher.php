@@ -54,7 +54,15 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
             {
                 $this->log('dispatch task', $runner);
 
-                $result = $runner->run();
+                try {
+                    $result = $runner->run();
+                }
+                catch (Exception $e)
+                {
+                    $this->log('exception thrown: '.$e->getMessage(), $runner);
+
+                    $result = ComSchedulerTaskInterface::TASK_COMPLETE;
+                }
 
                 $this->log('result: '.$result, $runner);
 
