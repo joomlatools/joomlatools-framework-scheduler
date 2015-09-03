@@ -54,9 +54,9 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
      */
     protected function _beforeDispatch(KDispatcherContextInterface $context)
     {
-        try
+        if ($context->request->query->has('scheduler'))
         {
-            if ($context->request->query->has('scheduler'))
+            try
             {
                 $this->syncTasks();
 
@@ -73,12 +73,12 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
 
                 return false;
             }
-        }
-        catch (Exception $e)
-        {
-            /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
-            if (KClassLoader::getInstance()->isDebug()) {
-                throw $e;
+            catch (Exception $e)
+            {
+                /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
+                if (KClassLoader::getInstance()->isDebug()) {
+                    throw $e;
+                }
             }
         }
 
