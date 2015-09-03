@@ -42,7 +42,7 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
 
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
-                'stop_on'     => time()+4,
+                'stop_on'     => time()+15,
                 'logger'      => array($this, 'log')
             ));
 
