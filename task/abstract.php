@@ -48,12 +48,13 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
         parent::__construct($config);
 
         $this->_priority  = $config->priority;
-
         $this->_state     = $config->state;
-
         $this->_frequency = $config->frequency;
-
         $this->_logger    = KObjectConfig::unbox($config->logger);
+
+        if (!$this->_state instanceof KObjectConfig) {
+            $this->_state = new KObjectConfig($this->_state);
+        }
     }
 
     protected function _initialize(KObjectConfig $config)
