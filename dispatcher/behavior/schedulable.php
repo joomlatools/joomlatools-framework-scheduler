@@ -169,14 +169,18 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
         }
 
         $tasks    = $this->getConfig()->tasks->toArray();
+        $current  = array();
         $existing = $model->fetch();
 
+        // Add new tasks and update frequencies if needed
         foreach ($tasks as $identifier => $config)
         {
             if (is_numeric($identifier)) {
                 $identifier = $config;
                 $config = array();
             }
+
+            $current[] = $identifier;
 
             $entity = $existing->find($identifier);
 
@@ -186,8 +190,21 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
                 $entity->id = $identifier;
             }
 
-            $entity->frequency = $this->getObject($identifier, $config)->getFrequency();
-            $entity->save();
+            $frequency = $this->getObject($identifier, $config)->getFrequency();
+
+            if ($frequency !== $entity->frequency)
+            {
+                $entity->frequency = $frequency;
+                $entity->save();
+            }
+
+        }
+
+        foreach ($existing as $entity)
+        {
+            if (!in_array($entity->id, $current)) {
+                $entity->delete();
+            }
         }
     }
 }
