@@ -1,0 +1,26 @@
+{
+    "name": "nooku/nooku-scheduler",
+    "type": "nooku-component",
+    "license": "GPLv3",
+    "description": "A reusable component for task scheduling",
+    "keywords": [
+        "nooku",
+        "components",
+        "scheduler"
+    ],
+    "homepage": "https://github.com/nooku/nooku-scheduler",
+    "authors": [
+        {
+            "name": "Timble",
+            "email": "info@timble.net",
+            "homepage": "http://www.timble.net"
+        }
+    ],
+    "require": {
+        "nooku/nooku-framework": "~2.0",
+        "mtdowling/cron-expression": "~1.0"
+    },
+    "autoload": {
+        "files": ["autoload.php"]
+    }
+}
