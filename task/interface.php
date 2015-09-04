@@ -21,13 +21,14 @@ interface ComSchedulerTaskInterface
     const TASK_COMPLETE = 0;
     const TASK_SUSPEND  = -1;
 
-    const FREQUENCY_EVERY_MINUTE    = '* * * * *';
-    const FREQUENCY_EVERY_HALF_HOUR = '*/30 * * * *';
-    const FREQUENCY_HOURLY          = '0 * * * *';
-    const FREQUENCY_DAILY           = '0 0 * * *';
-    const FREQUENCY_WEEKLY          = '0 0 * * 0';
-    const FREQUENCY_MONTHLY         = '0 0 1 * *';
-    const FREQUENCY_YEARLY          = '0 0 1 1 *';
+    const FREQUENCY_EVERY_MINUTE       = '* * * * *';
+    const FREQUENCY_EVERY_QUARTER_HOUR = '*/15 * * * *';
+    const FREQUENCY_EVERY_HALF_HOUR    = '*/30 * * * *';
+    const FREQUENCY_HOURLY             = '0 * * * *';
+    const FREQUENCY_DAILY              = '0 0 * * *';
+    const FREQUENCY_WEEKLY             = '0 0 * * 0';
+    const FREQUENCY_MONTHLY            = '0 0 1 * *';
+    const FREQUENCY_YEARLY             = '0 0 1 1 *';
 
     /**
      * Runs the task
