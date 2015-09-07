@@ -62,7 +62,7 @@ class ComSchedulerJobDispatcher extends ComSchedulerJobDispatcherAbstract
                 {
                     $this->log('exception thrown: '.$e->getMessage(), $runner);
 
-                    $result = ComSchedulerJobInterface::JOB_COMPLETE;
+                    $result = ComSchedulerJobInterface::JOB_ERROR;
                 }
 
                 $this->log('result: '.$result, $runner);

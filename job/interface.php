@@ -17,6 +17,7 @@ interface ComSchedulerJobInterface
 {
     const JOB_COMPLETE = 0;
     const JOB_SUSPEND  = -1;
+    const JOB_ERROR    = 1;
 
     const FREQUENCY_EVERY_MINUTE       = '* * * * *';
     const FREQUENCY_EVERY_QUARTER_HOUR = '*/15 * * * *';
