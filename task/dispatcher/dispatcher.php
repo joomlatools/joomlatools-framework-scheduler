@@ -40,6 +40,7 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
         {
             $result = false;
 
+            /** @var ComSchedulerTaskInterface $runner */
             $runner = $this->getObject($task->id, array(
                 'state'       => $task->getState(),
                 'stop_on'     => time()+15,
@@ -74,9 +75,8 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
                     high priority: put it on the top of high priority queue
                     low priority:  put it on the bottom of high priority queue
                 */
-                $high_priority = $runner->getPriority() === ComSchedulerTaskInterface::PRIORITY_HIGH;
 
-                $task->ordering = $high_priority ? -PHP_INT_MAX : PHP_INT_MAX;
+                $task->ordering = $runner->isPrioritized() ? -PHP_INT_MAX : PHP_INT_MAX;
 
                 if ($result === ComSchedulerTaskInterface::TASK_SUSPEND) {
                     $task->queue = 1;

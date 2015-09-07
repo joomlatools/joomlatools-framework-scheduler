@@ -16,11 +16,11 @@
 abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerTaskInterface
 {
     /**
-     * Task priority
+     * Prioritized flag
      *
-     * @var int
+     * @var bool
      */
-    protected $_priority;
+    protected $_prioritized;
 
     /**
      * Task state
@@ -47,10 +47,10 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     {
         parent::__construct($config);
 
-        $this->_priority  = $config->priority;
-        $this->_state     = $config->state;
-        $this->_frequency = $config->frequency;
-        $this->_logger    = KObjectConfig::unbox($config->logger);
+        $this->_prioritized  = $config->prioritized;
+        $this->_state        = $config->state;
+        $this->_frequency    = $config->frequency;
+        $this->_logger       = KObjectConfig::unbox($config->logger);
 
         if (!$this->_state instanceof KObjectConfig) {
             $this->_state = new KObjectConfig($this->_state);
@@ -60,9 +60,9 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'state'    => array(),
-            'priority' => ComSchedulerTaskInterface::PRIORITY_LOW,
-            'frequency' => ComSchedulerTaskInterface::FREQUENCY_HOURLY
+            'state'       => array(),
+            'prioritized' => false,
+            'frequency'   => ComSchedulerTaskInterface::FREQUENCY_HOURLY
         ));
     }
 
@@ -135,13 +135,25 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns the task priority
+     * Returns the prioritized flag of the task
      *
-     * @return int
+     * @return bool
      */
-    public function getPriority()
+    public function isPrioritized()
     {
-        return $this->_priority;
+        return $this->_prioritized;
+    }
+
+    /**
+     * Set tif the task is prioritized
+     * @param $prioritized bool
+     * @return $this
+     */
+    public function setPrioritized($prioritized)
+    {
+        $this->_prioritized = (bool) $prioritized;
+
+        return $this;
     }
 
     /**

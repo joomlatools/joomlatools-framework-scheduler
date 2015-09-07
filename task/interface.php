@@ -15,9 +15,6 @@
  */
 interface ComSchedulerTaskInterface
 {
-    const PRIORITY_HIGH    = 2;
-    const PRIORITY_LOW     = 4;
-
     const TASK_COMPLETE = 0;
     const TASK_SUSPEND  = -1;
 
@@ -76,11 +73,18 @@ interface ComSchedulerTaskInterface
     public function suspend();
 
     /**
-     * Returns the task priority
+     * Returns the prioritized flag of the task
      *
-     * @return int
+     * @return bool
      */
-    public function getPriority();
+    public function isPrioritized();
+
+    /**
+     * Set tif the task is prioritized
+     * @param $prioritized bool
+     * @return $this
+     */
+    public function setPrioritized($prioritized);
 
     /**
      * Returns the task frequency in cron expression
