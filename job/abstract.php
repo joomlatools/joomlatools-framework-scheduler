@@ -23,13 +23,6 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     protected $_prioritized;
 
     /**
-     * Job state
-     *
-     * @var KObjectConfigInterface
-     */
-    protected $_state;
-
-    /**
      * Job frequency
      *
      * @var int
@@ -37,30 +30,22 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     protected $_frequency;
 
     /**
-     * A logger passed by the job dispatcher
-     *
-     * @var callable
+     * @param KObjectConfig $config
      */
-    protected $_logger;
-
     public function __construct(KObjectConfig $config)
     {
         parent::__construct($config);
 
-        $this->_prioritized  = $config->prioritized;
-        $this->_state        = $config->state;
-        $this->_frequency    = $config->frequency;
-        $this->_logger       = KObjectConfig::unbox($config->logger);
-
-        if (!$this->_state instanceof KObjectConfig) {
-            $this->_state = new KObjectConfig($this->_state);
-        }
+        $this->setPrioritized($config->prioritized);
+        $this->setFrequency($config->frequency);
     }
 
+    /**
+     * @param KObjectConfig $config
+     */
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'state'       => array(),
             'prioritized' => false,
             'frequency'   => ComSchedulerJobInterface::FREQUENCY_HOURLY
         ));
@@ -69,50 +54,10 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     /**
      * Runs the job
      *
+     * @param  ComSchedulerJobContextInterface $context Context
      * @return int The result of $this->complete() or $this->suspend()
      */
-    abstract public function run();
-
-    /**
-     * Logs a message for debugging purposes
-     *
-     * @param $message string
-     */
-    public function log($message)
-    {
-        if (is_callable($this->_logger)) {
-            call_user_func($this->_logger, $message, $this);
-        }
-    }
-
-    /**
-     * Returns if the job has time left to run.
-     * If the method returns false the job should save state and call suspend as soon as possible.
-     *
-     * Condition is passed by the dispatcher, usually only when the job is run in an HTTP context
-     *
-     * @return boolean
-     */
-    public function hasTimeLeft()
-    {
-        $result = true;
-
-        if ($this->getConfig()->stop_on) {
-            $result = time() < $this->getConfig()->stop_on;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Returns the remaining time for the job to run
-     *
-     * @return int
-     */
-    public function getTimeLeft()
-    {
-        return max($this->getConfig()->stop_on - time(), 0);
-    }
+    abstract public function run(ComSchedulerJobContextInterface $context);
 
     /**
      * Signals the job completion
@@ -135,6 +80,16 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     }
 
     /**
+     * Signals an error in the job
+     *
+     * @return int
+     */
+    public function fail()
+    {
+        return ComSchedulerJobInterface::JOB_FAIL;
+    }
+
+    /**
      * Returns the prioritized flag of the job
      *
      * @return bool
@@ -145,7 +100,7 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     }
 
     /**
-     * Set tif the job is prioritized
+     * Sets if the job is prioritized
      * @param $prioritized bool
      * @return $this
      */
@@ -167,11 +122,15 @@ abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJo
     }
 
     /**
-     * Returns the job state
+     * Sets the frequency
      *
-     * @return KObjectConfigInterface
+     * @param int $frequency
+     * @return $this
      */
-    public function getState() {
-        return $this->_state;
+    public function setFrequency($frequency)
+    {
+        $this->_frequency = $frequency;
+
+        return $this;
     }
 }

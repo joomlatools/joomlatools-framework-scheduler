@@ -30,42 +30,59 @@ class ComSchedulerJobDispatcher extends ComSchedulerJobDispatcherAbstract
     }
 
     /**
+     * Gets the job context
+     *
+     * @return ComSchedulerJobContextInterface
+     */
+    public function getContext()
+    {
+        $context = new ComSchedulerJobContext();
+        $context->setSubject($this);
+
+        return $context;
+    }
+
+    /**
      * Dispatches the next job in line
      *
      * @return bool
      */
     public function dispatch()
     {
-        if ($job = $this->pickNextJob())
+        if ($entity = $this->pickNextJob())
         {
             $result = false;
 
-            /** @var ComSchedulerJobInterface $runner */
-            $runner = $this->getObject($job->id, array(
-                'state'       => $job->getState(),
-                'stop_on'     => time()+15,
-                'logger'      => array($this, 'log')
-            ));
+            $context = $this->getContext();
+            $context->setTimeLimit(time()+15);
+            $context->setState($entity->getState());
+
+            /** @var ComSchedulerJobInterface $job */
+            $job = $this->getObject($entity->id);
 
             // Set to running
-            $job->status = 1;
-            $job->save();
+            $entity->status = 1;
+            $entity->save();
 
             try
             {
-                $this->log('dispatch job', $runner);
+                $this->log('dispatch job', $job);
 
                 try {
-                    $result = $runner->run();
+                    $result = $job->run($context);
                 }
                 catch (Exception $e)
                 {
-                    $this->log('exception thrown: '.$e->getMessage(), $runner);
+                    $this->log('exception thrown: '.$e->getMessage(), $job);
 
-                    $result = ComSchedulerJobInterface::JOB_ERROR;
+                    $result = ComSchedulerJobInterface::JOB_FAIL;
                 }
 
-                $this->log('result: '.$result, $runner);
+                $this->log('result: '.$result, $job);
+
+                foreach ($context->getLogs() as $log) {
+                    $this->log($log, $job);
+                }
 
                 /*
                 complete:
@@ -76,26 +93,25 @@ class ComSchedulerJobDispatcher extends ComSchedulerJobDispatcherAbstract
                     low priority:  put it on the bottom of high priority queue
                 */
 
-                $job->ordering = $runner->isPrioritized() ? -PHP_INT_MAX : PHP_INT_MAX;
+                $entity->ordering = $job->isPrioritized() ? -PHP_INT_MAX : PHP_INT_MAX;
 
                 if ($result === ComSchedulerJobInterface::JOB_SUSPEND) {
-                    $job->queue = 1;
+                    $entity->queue = 1;
                 }
                 else {
-                    $job->completed_on = gmdate('Y-m-d H:i:s');
-                    $job->queue = 0;
+                    $entity->completed_on = gmdate('Y-m-d H:i:s');
+                    $entity->queue = 0;
                 }
             }
-            catch (Exception $e) {
-            }
+            catch (Exception $e) {}
 
-            if ($result === ComSchedulerJobInterface::JOB_COMPLETE && !$this->_getNextRun($job)) {
-                $job->delete();
+            if ($result === ComSchedulerJobInterface::JOB_COMPLETE && !$this->_getNextRun($entity)) {
+                $entity->delete();
             }
             else {
                 // Stop the job
-                $job->status = 0;
-                $job->save();
+                $entity->status = 0;
+                $entity->save();
             }
 
             return true;

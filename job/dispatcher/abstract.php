@@ -77,7 +77,7 @@ abstract class ComSchedulerJobDispatcherAbstract extends KObject implements ComS
             $this->_logs[$identifier] = array();
         }
 
-        $this->_logs[$identifier][] = (object) array('message' => $message, 'timestamp' => time());
+        $this->_logs[$identifier][] = $message;
     }
 
     /**

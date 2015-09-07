@@ -17,7 +17,7 @@ interface ComSchedulerJobInterface
 {
     const JOB_COMPLETE = 0;
     const JOB_SUSPEND  = -1;
-    const JOB_ERROR    = 1;
+    const JOB_FAIL     = 1;
 
     const FREQUENCY_EVERY_MINUTE       = '* * * * *';
     const FREQUENCY_EVERY_QUARTER_HOUR = '*/15 * * * *';
@@ -31,33 +31,10 @@ interface ComSchedulerJobInterface
     /**
      * Runs the job
      *
+     * @param  ComSchedulerJobContextInterface $context Context
      * @return int The result of $this->complete() or $this->suspend()
      */
-    public function run();
-
-    /**
-     * Logs a message for debugging purposes
-     *
-     * @param $message string
-     */
-    public function log($message);
-
-    /**
-     * Returns if the job has time left to run.
-     * If the method returns false the job should save state and call suspend as soon as possible.
-     *
-     * Condition is passed by the dispatcher, usually only when the job is run in an HTTP context
-     *
-     * @return boolean
-     */
-    public function hasTimeLeft();
-
-    /**
-     * Returns the remaining time for the job to run
-     *
-     * @return int
-     */
-    public function getTimeLeft();
+    public function run(ComSchedulerJobContextInterface $context);
 
     /**
      * Signals the job completion
@@ -72,6 +49,13 @@ interface ComSchedulerJobInterface
      * @return int
      */
     public function suspend();
+
+    /**
+     * Signals an error in the job
+     *
+     * @return int
+     */
+    public function fail();
 
     /**
      * Returns the prioritized flag of the job
@@ -95,9 +79,10 @@ interface ComSchedulerJobInterface
     public function getFrequency();
 
     /**
-     * Returns the job state
+     * Sets the frequency
      *
-     * @return KObjectConfigInterface
+     * @param int $frequency
+     * @return $this
      */
-    public function getState();
+    public function setFrequency($frequency);
 }
