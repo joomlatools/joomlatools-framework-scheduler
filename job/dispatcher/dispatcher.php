@@ -8,14 +8,14 @@
  */
 
 /**
- * Task dispatcher
+ * Job dispatcher
  *
- * Runs the tasks by ordering and priority
+ * Runs the jobs by ordering and priority
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
+class ComSchedulerJobDispatcher extends ComSchedulerJobDispatcherAbstract
 {
     /**
      * @param KObjectConfig $config
@@ -30,30 +30,30 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
     }
 
     /**
-     * Dispatches the next task in line
+     * Dispatches the next job in line
      *
      * @return bool
      */
     public function dispatch()
     {
-        if ($task = $this->pickNextTask())
+        if ($job = $this->pickNextJob())
         {
             $result = false;
 
-            /** @var ComSchedulerTaskInterface $runner */
-            $runner = $this->getObject($task->id, array(
-                'state'       => $task->getState(),
+            /** @var ComSchedulerJobInterface $runner */
+            $runner = $this->getObject($job->id, array(
+                'state'       => $job->getState(),
                 'stop_on'     => time()+15,
                 'logger'      => array($this, 'log')
             ));
 
             // Set to running
-            $task->status = 1;
-            $task->save();
+            $job->status = 1;
+            $job->save();
 
             try
             {
-                $this->log('dispatch task', $runner);
+                $this->log('dispatch job', $runner);
 
                 try {
                     $result = $runner->run();
@@ -62,7 +62,7 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
                 {
                     $this->log('exception thrown: '.$e->getMessage(), $runner);
 
-                    $result = ComSchedulerTaskInterface::TASK_COMPLETE;
+                    $result = ComSchedulerJobInterface::JOB_COMPLETE;
                 }
 
                 $this->log('result: '.$result, $runner);
@@ -76,26 +76,26 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
                     low priority:  put it on the bottom of high priority queue
                 */
 
-                $task->ordering = $runner->isPrioritized() ? -PHP_INT_MAX : PHP_INT_MAX;
+                $job->ordering = $runner->isPrioritized() ? -PHP_INT_MAX : PHP_INT_MAX;
 
-                if ($result === ComSchedulerTaskInterface::TASK_SUSPEND) {
-                    $task->queue = 1;
+                if ($result === ComSchedulerJobInterface::JOB_SUSPEND) {
+                    $job->queue = 1;
                 }
                 else {
-                    $task->completed_on = gmdate('Y-m-d H:i:s');
-                    $task->queue = 0;
+                    $job->completed_on = gmdate('Y-m-d H:i:s');
+                    $job->queue = 0;
                 }
             }
             catch (Exception $e) {
             }
 
-            if ($result === ComSchedulerTaskInterface::TASK_COMPLETE && !$this->_getNextRun($task)) {
-                $task->delete();
+            if ($result === ComSchedulerJobInterface::JOB_COMPLETE && !$this->_getNextRun($job)) {
+                $job->delete();
             }
             else {
-                // Stop the task
-                $task->status = 0;
-                $task->save();
+                // Stop the job
+                $job->status = 0;
+                $job->save();
             }
 
             return true;
@@ -105,13 +105,13 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
     }
 
     /**
-     * Picks the next task to run based on priority
+     * Picks the next job to run based on priority
      *
      * @return null|KDatabaseRowInterface
      */
-    public function pickNextTask()
+    public function pickNextJob()
     {
-        $this->_quitStaleTasks();
+        $this->_quitStaleJobs();
 
         if ($this->getModel()->status(1)->count() === 0)
         {
@@ -121,24 +121,24 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
             {
                 $low_priority = $this->getModel()->status(0)->sort('ordering')->queue(0)->fetch();
 
-                foreach ($low_priority as $task)
+                foreach ($low_priority as $job)
                 {
-                    if ($this->_isDue($task))
+                    if ($this->_isDue($job))
                     {
-                        $task->queue = 1;
+                        $job->queue = 1;
 
-                        if ($task->save()) {
-                            return $task;
+                        if ($job->save()) {
+                            return $job;
                         }
                     }
                 }
             }
             else
             {
-                foreach ($high_priority as $task)
+                foreach ($high_priority as $job)
                 {
-                    if ($this->_isDue($task)) {
-                        return $task;
+                    if ($this->_isDue($job)) {
+                        return $job;
                     }
                 }
             }
@@ -149,15 +149,15 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
         return null;
     }
 
-    protected function _isDue($task)
+    protected function _isDue($job)
     {
         $result = true;
 
-        if ($task->completed_on !== '0000-00-00 00:00:00')
+        if ($job->completed_on !== '0000-00-00 00:00:00')
         {
             try {
-                $cron   = Cron\CronExpression::factory($task->frequency);
-                $result = $cron->getNextRunDate($task->completed_on) < new DateTime('now');
+                $cron   = Cron\CronExpression::factory($job->frequency);
+                $result = $cron->getNextRunDate($job->completed_on) < new DateTime('now');
             }
             catch (RuntimeException $e) {
                 $result = true; // last run and it'll be deleted
@@ -170,12 +170,12 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
         return $result;
     }
 
-    protected function _getNextRun($task)
+    protected function _getNextRun($job)
     {
         $result = false;
 
         try {
-            $cron   = Cron\CronExpression::factory($task->frequency);
+            $cron   = Cron\CronExpression::factory($job->frequency);
             $result = $cron->getNextRunDate();
         }
         catch (RuntimeException $e) {
@@ -185,7 +185,7 @@ class ComSchedulerTaskDispatcher extends ComSchedulerTaskDispatcherAbstract
         return $result;
     }
 
-    protected function _quitStaleTasks()
+    protected function _quitStaleJobs()
     {
         $stale = $this->getModel()->stale(1)->fetch();
 

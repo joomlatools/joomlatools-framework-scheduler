@@ -24,7 +24,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
         parent::__construct($config);
 
         if (!$this->getConfig()->table_name) {
-            throw new RuntimeException('Tasks table name cannot be empty');
+            throw new RuntimeException('Jobs table name cannot be empty');
         }
     }
 
@@ -37,8 +37,8 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
     {
         $config->append(array(
             'table_name' => null,
-            'tasks'      => array(),
-            'model'      => 'com:scheduler.model.tasks',
+            'jobs'      => array(),
+            'model'      => 'com:scheduler.model.jobs',
             'trigger_condition' => null
         ));
 
@@ -46,7 +46,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
     }
 
     /**
-     * Runs the task dispatcher and ends the request if the request has scheduler=1
+     * Runs the job dispatcher and ends the request if the request has scheduler=1
      *
      * @param KDispatcherContextInterface $context
      * @return bool
@@ -58,13 +58,13 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
         {
             try
             {
-                $this->syncTasks();
+                $this->syncJobs();
 
-                $dispatcher = $this->getTaskDispatcher();
+                $dispatcher = $this->getJobDispatcher();
                 $dispatcher->dispatch();
 
                 $result = new stdClass();
-                $result->continue = (bool) $dispatcher->pickNextTask();
+                $result->continue = (bool) $dispatcher->pickNextJob();
                 /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
                 $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
 
@@ -131,31 +131,31 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
     }
 
     /**
-     * Returns the task dispatcher
+     * Returns the job dispatcher
      *
-     * @return ComSchedulerTaskDispatcherInterface
+     * @return ComSchedulerJobDispatcherInterface
      */
-    public function getTaskDispatcher()
+    public function getJobDispatcher()
     {
         $config = $this->getConfig();
 
-        return $this->getObject('com:scheduler.task.dispatcher', array(
+        return $this->getObject('com:scheduler.job.dispatcher', array(
             'model' => $this->getObject($config->model, array(
-                'table' => $this->getObject('com:scheduler.database.table.tasks', array('name' => $config->table_name))
+                'table' => $this->getObject('com:scheduler.database.table.jobs', array('name' => $config->table_name))
             ))
         ));
     }
 
     /**
-     * Syncs the tasks passed into the object config to the database
+     * Syncs the jobs passed into the object config to the database
      *
      * Automatically creates the database table if necessary
-     * Also handles task frequency updates
+     * Also handles job frequency updates
      */
-    public function syncTasks()
+    public function syncJobs()
     {
         try {
-            $model = $this->getTaskDispatcher()->getModel();
+            $model = $this->getJobDispatcher()->getModel();
         }
         catch (RuntimeException $e)
         {
@@ -165,15 +165,15 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
             $content = sprintf($content, $adapter->getTablePrefix().$this->getConfig()->table_name);
             $adapter->execute($content);
 
-            $model = $this->getTaskDispatcher()->getModel();
+            $model = $this->getJobDispatcher()->getModel();
         }
 
-        $tasks    = $this->getConfig()->tasks->toArray();
+        $jobs    = $this->getConfig()->jobs->toArray();
         $current  = array();
         $existing = $model->fetch();
 
-        // Add new tasks and update frequencies if needed
-        foreach ($tasks as $identifier => $config)
+        // Add new jobs and update frequencies if needed
+        foreach ($jobs as $identifier => $config)
         {
             if (is_numeric($identifier)) {
                 $identifier = $config;

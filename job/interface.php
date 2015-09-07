@@ -8,15 +8,15 @@
  */
 
 /**
- * Task interface
+ * Job interface
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-interface ComSchedulerTaskInterface
+interface ComSchedulerJobInterface
 {
-    const TASK_COMPLETE = 0;
-    const TASK_SUSPEND  = -1;
+    const JOB_COMPLETE = 0;
+    const JOB_SUSPEND  = -1;
 
     const FREQUENCY_EVERY_MINUTE       = '* * * * *';
     const FREQUENCY_EVERY_QUARTER_HOUR = '*/15 * * * *';
@@ -28,7 +28,7 @@ interface ComSchedulerTaskInterface
     const FREQUENCY_YEARLY             = '0 0 1 1 *';
 
     /**
-     * Runs the task
+     * Runs the job
      *
      * @return int The result of $this->complete() or $this->suspend()
      */
@@ -42,59 +42,59 @@ interface ComSchedulerTaskInterface
     public function log($message);
 
     /**
-     * Returns if the task has time left to run.
-     * If the method returns false the task should save state and call suspend as soon as possible.
+     * Returns if the job has time left to run.
+     * If the method returns false the job should save state and call suspend as soon as possible.
      *
-     * Condition is passed by the dispatcher, usually only when the task is run in an HTTP context
+     * Condition is passed by the dispatcher, usually only when the job is run in an HTTP context
      *
      * @return boolean
      */
     public function hasTimeLeft();
 
     /**
-     * Returns the remaining time for the task to run
+     * Returns the remaining time for the job to run
      *
      * @return int
      */
     public function getTimeLeft();
 
     /**
-     * Signals the task completion
+     * Signals the job completion
      *
      * @return int
      */
     public function complete();
 
     /**
-     * Signals the task suspension
+     * Signals the job suspension
      *
      * @return int
      */
     public function suspend();
 
     /**
-     * Returns the prioritized flag of the task
+     * Returns the prioritized flag of the job
      *
      * @return bool
      */
     public function isPrioritized();
 
     /**
-     * Set tif the task is prioritized
+     * Set tif the job is prioritized
      * @param $prioritized bool
      * @return $this
      */
     public function setPrioritized($prioritized);
 
     /**
-     * Returns the task frequency in cron expression
+     * Returns the job frequency in cron expression
      *
      * @return string
      */
     public function getFrequency();
 
     /**
-     * Returns the task state
+     * Returns the job state
      *
      * @return KObjectConfigInterface
      */

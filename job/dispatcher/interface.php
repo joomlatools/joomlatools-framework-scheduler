@@ -13,29 +13,29 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-interface ComSchedulerTaskDispatcherInterface
+interface ComSchedulerJobDispatcherInterface
 {
     /**
-     * Dispatches the next task in line
+     * Dispatches the next job in line
      *
      * @return bool
      */
     public function dispatch();
 
     /**
-     * Picks the next task to run based on priority
+     * Picks the next job to run based on priority
      *
      * @return null|KDatabaseRowInterface
      */
-    public function pickNextTask();
+    public function pickNextJob();
 
     /**
      * Logs a message for debugging purposes
      *
      * @param $message
-     * @param $task KObjectInterface|null
+     * @param $job KObjectInterface|null
      */
-    public function log($message, $task = null);
+    public function log($message, $job = null);
 
     /**
      * Returns the logs

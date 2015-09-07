@@ -8,12 +8,12 @@
  */
 
 /**
- * Tasks model
+ * Jobs model
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerModelTasks extends KModelDatabase
+class ComSchedulerModelJobs extends KModelDatabase
 {
     public function __construct(KObjectConfig $config)
     {

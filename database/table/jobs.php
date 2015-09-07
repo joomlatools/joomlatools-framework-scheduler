@@ -8,12 +8,12 @@
  */
 
 /**
- * Tasks table
+ * Jobs table
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerDatabaseTableTasks extends KDatabaseTableAbstract
+class ComSchedulerDatabaseTableJobs extends KDatabaseTableAbstract
 {
     protected function _initialize(KObjectConfig $config)
     {

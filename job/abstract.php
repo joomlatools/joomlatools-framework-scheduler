@@ -8,12 +8,12 @@
  */
 
 /**
- * Task interface
+ * Job interface
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerTaskInterface
+abstract class ComSchedulerJobAbstract extends KObject implements ComSchedulerJobInterface
 {
     /**
      * Prioritized flag
@@ -23,21 +23,21 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     protected $_prioritized;
 
     /**
-     * Task state
+     * Job state
      *
      * @var KObjectConfigInterface
      */
     protected $_state;
 
     /**
-     * Task frequency
+     * Job frequency
      *
      * @var int
      */
     protected $_frequency;
 
     /**
-     * A logger passed by the task dispatcher
+     * A logger passed by the job dispatcher
      *
      * @var callable
      */
@@ -62,12 +62,12 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
         $config->append(array(
             'state'       => array(),
             'prioritized' => false,
-            'frequency'   => ComSchedulerTaskInterface::FREQUENCY_HOURLY
+            'frequency'   => ComSchedulerJobInterface::FREQUENCY_HOURLY
         ));
     }
 
     /**
-     * Runs the task
+     * Runs the job
      *
      * @return int The result of $this->complete() or $this->suspend()
      */
@@ -86,10 +86,10 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns if the task has time left to run.
-     * If the method returns false the task should save state and call suspend as soon as possible.
+     * Returns if the job has time left to run.
+     * If the method returns false the job should save state and call suspend as soon as possible.
      *
-     * Condition is passed by the dispatcher, usually only when the task is run in an HTTP context
+     * Condition is passed by the dispatcher, usually only when the job is run in an HTTP context
      *
      * @return boolean
      */
@@ -105,7 +105,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns the remaining time for the task to run
+     * Returns the remaining time for the job to run
      *
      * @return int
      */
@@ -115,27 +115,27 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Signals the task completion
+     * Signals the job completion
      *
      * @return int
      */
     public function complete()
     {
-        return ComSchedulerTaskInterface::TASK_COMPLETE;
+        return ComSchedulerJobInterface::JOB_COMPLETE;
     }
 
     /**
-     * Signals the task suspension
+     * Signals the job suspension
      *
      * @return int
      */
     public function suspend()
     {
-        return ComSchedulerTaskInterface::TASK_SUSPEND;
+        return ComSchedulerJobInterface::JOB_SUSPEND;
     }
 
     /**
-     * Returns the prioritized flag of the task
+     * Returns the prioritized flag of the job
      *
      * @return bool
      */
@@ -145,7 +145,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Set tif the task is prioritized
+     * Set tif the job is prioritized
      * @param $prioritized bool
      * @return $this
      */
@@ -157,7 +157,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns the task frequency in cron expression
+     * Returns the job frequency in cron expression
      *
      * @return string
      */
@@ -167,7 +167,7 @@ abstract class ComSchedulerTaskAbstract extends KObject implements ComSchedulerT
     }
 
     /**
-     * Returns the task state
+     * Returns the job state
      *
      * @return KObjectConfigInterface
      */

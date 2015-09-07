@@ -8,14 +8,14 @@
  */
 
 /**
- * Task dispatcher
+ * Job dispatcher
  *
- * Runs the tasks by ordering and priority
+ * Runs the jobs by ordering and priority
  *
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements ComSchedulerTaskDispatcherInterface
+abstract class ComSchedulerJobDispatcherAbstract extends KObject implements ComSchedulerJobDispatcherInterface
 {
     /**
      * @var KModelInterface
@@ -38,18 +38,18 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
     }
 
     /**
-     * Dispatches the next task in line
+     * Dispatches the next job in line
      *
      * @return bool
      */
     abstract public function dispatch();
 
     /**
-     * Picks the next task to run based on priority
+     * Picks the next job to run based on priority
      *
      * @return null|KDatabaseRowInterface
      */
-    abstract public function pickNextTask();
+    abstract public function pickNextJob();
 
     /**
      * @param KObjectConfig $config
@@ -57,7 +57,7 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'model' => 'com:scheduler.model.tasks'
+            'model' => 'com:scheduler.model.jobs'
         ));
 
         parent::_initialize($config);
@@ -67,11 +67,11 @@ abstract class ComSchedulerTaskDispatcherAbstract extends KObject implements Com
      * Logs a message for debugging purposes
      *
      * @param $message
-     * @param $task KObjectInterface|null
+     * @param $job KObjectInterface|null
      */
-    public function log($message, $task = null)
+    public function log($message, $job = null)
     {
-        $identifier = $task ? (string) $task->getIdentifier() : 'dispatcher';
+        $identifier = $job ? (string) $job->getIdentifier() : 'dispatcher';
 
         if (!isset($this->_logs[$identifier])) {
             $this->_logs[$identifier] = array();
