@@ -130,7 +130,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
      */
     protected function _actionDispatch(ComSchedulerJobContextInterface $context)
     {
-        if ($entity = $this->pickNextJob())
+        if ($entity = $this->getNextJob())
         {
             // Set to running
             $entity->status = 1;
@@ -239,7 +239,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
      *
      * @return null|KDatabaseRowInterface
      */
-    public function pickNextJob()
+    public function getNextJob()
     {
         $this->_quitStaleJobs();
 

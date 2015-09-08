@@ -49,7 +49,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
                 $dispatcher->dispatch();
 
                 $result = new stdClass();
-                $result->continue = (bool) $dispatcher->pickNextJob();
+                $result->continue = (bool) $dispatcher->getNextJob();
                 /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
                 $result->logs     = KClassLoader::getInstance()->isDebug() ? $dispatcher->getLogs() : array();
 
