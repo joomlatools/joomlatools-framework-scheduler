@@ -21,6 +21,7 @@ class ComSchedulerDatabaseTableJobs extends KDatabaseTableAbstract
             'behaviors' => array(
                 'orderable',
                 'lib:database.behavior.modifiable',
+                'identifiable',
                 'parameterizable' => array('column' => 'state')
             ),
             'filters' => array(
