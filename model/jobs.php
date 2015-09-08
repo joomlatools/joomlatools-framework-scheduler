@@ -20,7 +20,7 @@ class ComSchedulerModelJobs extends KModelDatabase
         parent::__construct($config);
 
         $this->getState()
-            ->insert('stale', 'boolean')
+            ->insert('stale', 'boolean', false)
             ->insert('status', 'int')
             ->insert('queue', 'int');
     }

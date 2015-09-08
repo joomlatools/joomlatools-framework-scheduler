@@ -13,7 +13,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-interface ComSchedulerJobInterface
+interface ComSchedulerJobInterface extends KObjectInterface
 {
     const JOB_COMPLETE = 0;
     const JOB_SUSPEND  = -1;

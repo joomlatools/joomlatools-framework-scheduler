@@ -13,7 +13,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-class ComSchedulerJobContext extends KCommand implements ComSchedulerJobContextInterface
+class ComSchedulerJobContext extends KControllerContext implements ComSchedulerJobContextInterface
 {
     /**
      * @var array

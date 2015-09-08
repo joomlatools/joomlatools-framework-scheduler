@@ -13,7 +13,7 @@
  * @author Ercan Ozkaya <https://github.com/ercanozkaya>
  * @package Koowa\Component\Scheduler
  */
-interface ComSchedulerJobContextInterface extends KCommandInterface
+interface ComSchedulerJobContextInterface extends KControllerContextInterface
 {
     /**
      * Sets the time limit
