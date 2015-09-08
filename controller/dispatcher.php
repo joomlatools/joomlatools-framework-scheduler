@@ -50,7 +50,8 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'model'	=> 'com:scheduler.model.jobs'
+            'model'	=> 'com:scheduler.model.jobs',
+            'jobs'  => array()
         ));
 
         parent::_initialize($config);
@@ -180,6 +181,60 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
 
 
     /**
+     * Syncs the jobs passed into the object config to the database
+     *
+     * Automatically creates the database table if necessary
+     * Also handles job frequency updates
+     */
+    protected function _actionSynchronize(ComSchedulerJobContextInterface $context)
+    {
+        $model    = $this->getModel();
+        $jobs     = $this->getConfig()->jobs->toArray();
+        $current  = array();
+        $existing = $model->fetch();
+
+        // Add new jobs and update frequencies if needed
+        foreach ($jobs as $identifier => $config)
+        {
+            if (is_numeric($identifier)) {
+                $identifier = $config;
+                $config = array();
+            }
+
+            $current[] = $identifier;
+
+            $entity = $existing->find($identifier);
+
+            try
+            {
+                if (!$entity)
+                {
+                    $entity = $model->create();
+                    $entity->id = $identifier;
+                    $entity->package = $this->getIdentifier($identifier)->getPackage();
+                }
+
+                $frequency = $this->getObject($identifier, $config)->getFrequency();
+
+                if ($frequency !== $entity->frequency)
+                {
+                    $entity->frequency = $frequency;
+                    $entity->save();
+                }
+            }
+            catch (Exception $e) {}
+
+        }
+
+        foreach ($existing as $entity)
+        {
+            if (!in_array($entity->id, $current)) {
+                $entity->delete();
+            }
+        }
+    }
+
+    /**
      * Picks the next job to run based on priority
      *
      * @return null|KDatabaseRowInterface
@@ -273,7 +328,6 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
             $stale->save();
         }
     }
-
 
     /**
      * Get the model object attached to the controller

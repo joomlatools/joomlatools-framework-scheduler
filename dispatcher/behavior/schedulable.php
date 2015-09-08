@@ -16,19 +16,6 @@
 class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstract
 {
     /**
-     * @throws RuntimeException
-     * @param KObjectConfig $config
-     */
-    public function __construct(KObjectConfig $config)
-    {
-        parent::__construct($config);
-
-        if (!$this->getConfig()->table_name) {
-            throw new RuntimeException('Jobs table name cannot be empty');
-        }
-    }
-
-    /**
      * Set defaults
      *
      * @param KObjectConfig $config
@@ -36,9 +23,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
     protected function _initialize(KObjectConfig $config)
     {
         $config->append(array(
-            'table_name' => null,
             'jobs'      => array(),
-            'model'      => 'com:scheduler.model.jobs',
             'trigger_condition' => null
         ));
 
@@ -60,7 +45,7 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
             {
                 $this->syncJobs();
 
-                $dispatcher = $this->getJobDispatcher();
+                $dispatcher = $this->getObject('com:scheduler.controller.dispatcher');
                 $dispatcher->dispatch();
 
                 $result = new stdClass();
@@ -126,84 +111,6 @@ class ComSchedulerDispatcherBehaviorSchedulable extends KControllerBehaviorAbstr
             /* @todo replace with Koowa::getInstance()->isDebug when koowa 3.0 is out */
             if (KClassLoader::getInstance()->isDebug()) {
                 throw $e;
-            }
-        }
-    }
-
-    /**
-     * Returns the job dispatcher
-     *
-     * @return ComSchedulerJobDispatcherInterface
-     */
-    public function getJobDispatcher()
-    {
-        $config = $this->getConfig();
-
-        return $this->getObject('com:scheduler.job.dispatcher', array(
-            'model' => $this->getObject($config->model, array(
-                'table' => $this->getObject('com:scheduler.database.table.jobs', array('name' => $config->table_name))
-            ))
-        ));
-    }
-
-    /**
-     * Syncs the jobs passed into the object config to the database
-     *
-     * Automatically creates the database table if necessary
-     * Also handles job frequency updates
-     */
-    public function syncJobs()
-    {
-        try {
-            $model = $this->getJobDispatcher()->getModel();
-        }
-        catch (RuntimeException $e)
-        {
-
-            $adapter = $this->getObject('database.adapter.mysqli');
-            $content = file_get_contents(__DIR__.'/../../resources/install/template.sql');
-            $content = sprintf($content, $adapter->getTablePrefix().$this->getConfig()->table_name);
-            $adapter->execute($content);
-
-            $model = $this->getJobDispatcher()->getModel();
-        }
-
-        $jobs    = $this->getConfig()->jobs->toArray();
-        $current  = array();
-        $existing = $model->fetch();
-
-        // Add new jobs and update frequencies if needed
-        foreach ($jobs as $identifier => $config)
-        {
-            if (is_numeric($identifier)) {
-                $identifier = $config;
-                $config = array();
-            }
-
-            $current[] = $identifier;
-
-            $entity = $existing->find($identifier);
-
-            if (!$entity)
-            {
-                $entity = $model->create();
-                $entity->id = $identifier;
-            }
-
-            $frequency = $this->getObject($identifier, $config)->getFrequency();
-
-            if ($frequency !== $entity->frequency)
-            {
-                $entity->frequency = $frequency;
-                $entity->save();
-            }
-
-        }
-
-        foreach ($existing as $entity)
-        {
-            if (!in_array($entity->id, $current)) {
-                $entity->delete();
             }
         }
     }
