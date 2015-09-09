@@ -89,6 +89,8 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         $job = $context->param;
 
         try {
+            $context->log('running '.(string)$job->getIdentifier());
+
             $context->result = $job->run($context);
         }
         catch (Exception $e)
@@ -98,28 +100,10 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
             $context->result = ComSchedulerJobInterface::JOB_FAIL;
         }
 
+        $context->log('ran '.(string)$job->getIdentifier());
+        $context->log('result: '.$context->result);
+
         return $context->result;
-    }
-
-    protected function _beforeRun(ComSchedulerJobContextInterface $context)
-    {
-        if ($context->param instanceof ComSchedulerJobInterface) {
-            $context->log('running '.(string)$context->param->getIdentifier());
-        }
-    }
-
-    protected function _afterRun(ComSchedulerJobContextInterface $context)
-    {
-        if ($context->param instanceof ComSchedulerJobInterface) {
-            $context->log('ran '.(string)$context->param->getIdentifier());
-            $context->log('result: '.$context->result);
-        }
-    }
-
-    protected function _afterDispatch(ComSchedulerJobContextInterface $context)
-    {
-        var_dump($context->result);
-        var_dump($context->getLogs());
     }
 
     /**
