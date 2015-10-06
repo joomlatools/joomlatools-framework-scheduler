@@ -22,5 +22,10 @@
     },
     "autoload": {
         "files": ["autoload.php"]
+    },
+    "nooku-component": {
+        "identifier": "com:scheduler",
+        "name": "scheduler",
+        "version": "1.0"
     }
 }
