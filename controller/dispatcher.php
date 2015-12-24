@@ -169,6 +169,8 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
      *
      * Automatically creates the database table if necessary
      * Also handles job frequency updates
+     *
+     * @param ComSchedulerJobContextInterface $context
      */
     protected function _actionSynchronize(ComSchedulerJobContextInterface $context)
     {
@@ -207,7 +209,6 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
                 }
             }
             catch (Exception $e) {}
-
         }
 
         foreach ($existing as $entity)
@@ -257,8 +258,6 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
                 }
             }
         }
-
-
 
         return null;
     }
