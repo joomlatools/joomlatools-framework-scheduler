@@ -298,9 +298,24 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         return $result;
     }
 
+    /**
+     * Quits jobs that are running for more than 5 minutes
+     *
+     * Uses a direct database query for speed
+     */
     protected function _quitStaleJobs()
     {
-        $stale = $this->getModel()->stale(1)->fetch();
+        $table = $this->getModel()->getTable();
+        $query = $this->getObject('database.query.update');
+
+        $query
+            ->table($table->getName())
+            ->values(array('status = 0', 'modified_on = NOW()'))
+            ->where('status = 1 AND NOW() > DATE_ADD(modified_on, INTERVAL 5 MINUTE)');
+
+        $table->getAdapter()->update($query);
+
+        /*$stale = $this->getModel()->stale(1)->fetch();
 
         if (count($stale))
         {
@@ -309,7 +324,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
             }
 
             $stale->save();
-        }
+        }*/
     }
 
     /**
