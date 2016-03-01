@@ -262,6 +262,62 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         return null;
     }
 
+    public function getNextRun()
+    {
+        $this->_quitStaleJobs();
+
+        $adapter = $this->getObject('database.adapter.mysqli');
+        $query   = $this->getObject('database.query.select')->table('scheduler_jobs');
+
+        $q1 = clone $query;
+        $q1->columns('COUNT(*)')->where('status = 1');
+
+        // There is a running job, keep hitting to make sure it finishes first
+        if (!$adapter->select($q1, KDatabase::FETCH_FIELD))
+        {
+            $next_run = time() + (4 * 60 * 60); // at worst, run once every 4 hours for housekeeping
+
+            $q2 = clone $query;
+            $q2->table('scheduler_jobs')
+                ->columns(array('completed_on', 'frequency'))
+                ->where('status = 0')
+                ->order('queue DESC, completed_on');
+
+            $jobs = $adapter->select($q2, KDatabase::FETCH_OBJECT_LIST);
+
+            foreach ($jobs as $job)
+            {
+                if ($job->completed_on === '0000-00-00 00:00:00') {
+                    $next_run = time();
+                    break; // next run is now
+                }
+
+                try
+                {
+                    if ($this->_isDue($job)) {
+                        $next_run = time();
+                        break;
+                    }
+
+                    $result = $this->_getNextRun($job);
+
+                    if ($result)
+                    {
+                        $result = $result->getTimestamp();
+
+                        if ($result < $next_run) {
+                            $next_run = $result;
+                        }
+                    }
+                }
+                catch (Exception $e) {}
+            }
+        }
+        else $next_run = time();
+
+        return $next_run;
+    }
+
     protected function _isDue($job)
     {
         $result = true;
