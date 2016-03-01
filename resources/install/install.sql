@@ -1,4 +1,4 @@
-CREATE TABLE `#__scheduler_jobs` (
+CREATE TABLE IF NOT EXISTS `#__scheduler_jobs` (
   `uuid` char(36) NOT NULL,
   `identifier` varchar(255) NOT NULL DEFAULT '',
   `package` varchar(64) NOT NULL DEFAULT '',
@@ -11,4 +11,4 @@ CREATE TABLE `#__scheduler_jobs` (
   `completed_on` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   UNIQUE KEY `name` (`identifier`),
   UNIQUE KEY `uuid` (`uuid`)
-) DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
