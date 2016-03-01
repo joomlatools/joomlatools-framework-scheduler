@@ -89,19 +89,18 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         $job = $context->param;
 
         try {
-            $context->log('running '.(string)$job->getIdentifier());
+            $context->log('Running '.$job->getIdentifier());
 
             $context->result = $job->run($context);
         }
         catch (Exception $e)
         {
-            $context->log('exception thrown: '.$e->getMessage());
+            $context->log('Exception thrown: '.$e->getMessage());
 
             $context->result = ComSchedulerJobInterface::JOB_FAIL;
         }
 
-        $context->log('ran '.(string)$job->getIdentifier());
-        $context->log('result: '.$context->result);
+        $context->log(sprintf('Ran %s with the result %s', $job->getIdentifier(), $context->result));
 
         return $context->result;
     }
