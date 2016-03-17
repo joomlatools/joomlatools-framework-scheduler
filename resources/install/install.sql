@@ -12,3 +12,10 @@ CREATE TABLE IF NOT EXISTS `#__scheduler_jobs` (
   UNIQUE KEY `name` (`identifier`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `#__scheduler_metadata` (
+  `type` varchar(32) NOT NULL DEFAULT '',
+  `sleep_until` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `last_run` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+  UNIQUE KEY `unique_type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

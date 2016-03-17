@@ -162,7 +162,6 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         return $context->result;
     }
 
-
     /**
      * Syncs the jobs passed into the object config to the database
      *
@@ -259,6 +258,18 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         }
 
         return null;
+    }
+
+    protected function _afterDispatch(KControllerContextInterface $context)
+    {
+        $sleep_until = $this->getNextRun();
+
+        $adapter = $this->getObject('database.adapter.mysqli');
+        $query   = sprintf("REPLACE INTO #__scheduler_metadata (`type`, `sleep_until`, `last_run`)
+            VALUES ('metadata', FROM_UNIXTIME(%d), NOW())", $sleep_until);
+
+
+        $adapter->execute($query);
     }
 
     public function getNextRun()
