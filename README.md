@@ -13,7 +13,7 @@ This is a re-usable component offering job sheduling and management for [Joomlat
 Install using [Composer](https://getcomposer.org/). Go to the root directory of your Joomla installation in command line and execute this command:
 
 ```
-composer require joomlatools/joomlatools-framework-scheduler:1.*
+composer require joomlatools/framework-scheduler:1.*
 ```
 
 The component will be installed in the `vendor` folder of the root directory of your Joomla site. The composer installer 
