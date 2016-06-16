@@ -20,6 +20,8 @@ interface ComSchedulerJobInterface extends KObjectInterface
     const JOB_FAIL     = 1;
 
     const FREQUENCY_EVERY_MINUTE       = '* * * * *';
+    const FREQUENCY_EVERY_FIVE_MINUTES = '*/5 * * * *';
+    const FREQUENCY_EVERY_TEN_MINUTES  = '*/10 * * * *';
     const FREQUENCY_EVERY_QUARTER_HOUR = '*/15 * * * *';
     const FREQUENCY_EVERY_HALF_HOUR    = '*/30 * * * *';
     const FREQUENCY_HOURLY             = '0 * * * *';
