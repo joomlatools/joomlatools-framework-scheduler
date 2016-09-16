@@ -21,7 +21,7 @@
         }
     ],
     "require": {
-        "joomlatools/framework": "~2.0",
+        "joomlatools/framework": "~3.0",
         "mtdowling/cron-expression": "~1.0"
     },
     "autoload": {
@@ -30,6 +30,6 @@
     "nooku-component": {
         "identifier": "com:scheduler",
         "name": "scheduler",
-        "version": "1.0"
+        "version": "1.0.0"
     }
 }
