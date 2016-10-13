@@ -335,8 +335,10 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
         if ($job->completed_on !== '0000-00-00 00:00:00')
         {
             try {
-                $cron   = Cron\CronExpression::factory($job->frequency);
-                $result = $cron->getNextRunDate($job->completed_on) < new DateTime('now');
+                $cron = Cron\CronExpression::factory($job->frequency);
+                $next = $cron->getNextRunDate(new DateTime($job->completed_on, new DateTimeZone('UTC')));
+                $now  = new DateTime('now', new DateTimeZone('UTC'));
+                $result = $next < $now;
             }
             catch (RuntimeException $e) {
                 $result = true; // last run and it'll be deleted
@@ -355,7 +357,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
 
         try {
             $cron   = Cron\CronExpression::factory($job->frequency);
-            $result = $cron->getNextRunDate();
+            $result = $cron->getNextRunDate(new DateTime('now', new DateTimeZone('UTC')));
         }
         catch (RuntimeException $e) {
             // never gonna run again :(
