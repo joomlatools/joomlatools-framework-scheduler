@@ -1,6 +1,6 @@
 {
     "name": "joomlatools/framework-scheduler",
-    "type": "nooku-component",
+    "type": "joomlatools-extension",
     "license": "GPLv3",
     "description": "A reusable component for task scheduling",
     "keywords": [
@@ -24,12 +24,7 @@
         "joomlatools/framework": "~3.0",
         "mtdowling/cron-expression": "~1.0"
     },
-    "autoload": {
-        "files": ["autoload.php"]
-    },
-    "nooku-component": {
-        "identifier": "com:scheduler",
-        "name": "scheduler",
-        "version": "1.0.1"
+    "extra": {
+        "joomlatools-component": "scheduler"
     }
 }
