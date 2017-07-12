@@ -97,7 +97,7 @@ class ComSchedulerJobContext extends KControllerContext implements ComSchedulerJ
      */
     public function log($message)
     {
-        $this->_logs[] = $message;
+        $this->_logs[] = [$message, time()];
     }
 
     /**
