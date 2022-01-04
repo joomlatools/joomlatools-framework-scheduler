@@ -308,7 +308,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
 
             foreach ($jobs as $job)
             {
-                if ($job->completed_on === '0000-00-00 00:00:00') {
+                if ($job->completed_on === null) {
                     $next_run = time();
                     break; // next run is now
                 }
@@ -343,7 +343,7 @@ class ComSchedulerControllerDispatcher extends KControllerAbstract implements Co
     {
         $result = true;
 
-        if ($job->completed_on !== '0000-00-00 00:00:00')
+        if ($job->completed_on !== null)
         {
             try {
                 $cron = Cron\CronExpression::factory($job->frequency);
