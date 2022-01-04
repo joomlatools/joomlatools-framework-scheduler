@@ -8,7 +8,7 @@
 
 class ComSchedulerVersion extends KObject
 {
-    const VERSION = '1.3.1';
+    const VERSION = '1.3.2';
 
     /**
      * Get the version
